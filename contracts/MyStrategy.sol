@@ -26,9 +26,9 @@ contract MyStrategy is BaseStrategy {
 
     address public constant CHEF = 0x0769fd68dFb93167989C6f7254cd0D766Fb2841F; // Polygon MiniChefv2
     address public constant SUSHISWAP_ROUTER =
-        0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f;
+        0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
 
-    uint256 public constant pid; // TODO: WBTC-WETH-SUSHI-Polygon pool ID
+    uint256 public constant pid = 0; // TODO: WBTC-WETH-SUSHI-Polygon pool ID
     uint256 public constant MAX_BPS = 10_000;
 
     // Used to signal to the Badger Tree that rewards where sent to it
