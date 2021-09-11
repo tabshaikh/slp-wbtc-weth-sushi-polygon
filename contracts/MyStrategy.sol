@@ -11,6 +11,8 @@ import "../deps/@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgrade
 
 import "../interfaces/badger/IController.sol";
 
+import {IUniswapRouterV2} from "../interfaces/uniswap/IUniswapRouterV2.sol";
+
 import {BaseStrategy} from "../deps/BaseStrategy.sol";
 
 contract MyStrategy is BaseStrategy {
@@ -21,6 +23,13 @@ contract MyStrategy is BaseStrategy {
     // address public want // Inherited from BaseStrategy, the token the strategy wants, swaps into and tries to grow
     address public lpComponent; // Token we provide liquidity with
     address public reward; // Token we farm and swap to want / lpComponent
+
+    address public constant CHEF = 0x0769fd68dFb93167989C6f7254cd0D766Fb2841F; // Polygon MiniChefv2
+    address public constant SUSHISWAP_ROUTER =
+        0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f;
+
+    uint256 public constant pid; // TODO: WBTC-WETH-SUSHI-Polygon pool ID
+    uint256 public constant MAX_BPS = 10_000;
 
     // Used to signal to the Badger Tree that rewards where sent to it
     event TreeDistribution(
@@ -49,14 +58,18 @@ contract MyStrategy is BaseStrategy {
 
         /// @dev Add config here
         want = _wantConfig[0];
-        lpComponent = _wantConfig[1];
-        reward = _wantConfig[2];
+        reward = _wantConfig[1];
 
         performanceFeeGovernance = _feeConfig[0];
         performanceFeeStrategist = _feeConfig[1];
         withdrawalFee = _feeConfig[2];
 
         /// @dev do one off approvals here
+        IERC20Upgradeable(want).safeApprove(CHEF, type(uint256).max);
+        IERC20Upgradeable(reward).safeApprove(
+            SUSHISWAP_ROUTER,
+            type(uint256).max
+        );
         // IERC20Upgradeable(want).safeApprove(gauge, type(uint256).max);
     }
 
@@ -141,12 +154,15 @@ contract MyStrategy is BaseStrategy {
 
         // Write your code here
 
-        uint256 earned =
-            IERC20Upgradeable(want).balanceOf(address(this)).sub(_before);
+        uint256 earned = IERC20Upgradeable(want).balanceOf(address(this)).sub(
+            _before
+        );
 
         /// @notice Keep this in so you get paid!
-        (uint256 governancePerformanceFee, uint256 strategistPerformanceFee) =
-            _processPerformanceFees(earned);
+        (
+            uint256 governancePerformanceFee,
+            uint256 strategistPerformanceFee
+        ) = _processPerformanceFees(earned);
 
         // TODO: If you are harvesting a reward token you're not compounding
         // You probably still want to capture fees for it
