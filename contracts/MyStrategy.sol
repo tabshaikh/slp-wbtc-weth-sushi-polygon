@@ -11,6 +11,7 @@ import "../deps/@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgrade
 
 import "../interfaces/badger/IController.sol";
 
+import {IMiniChefV2} from "../interfaces/sushiswap/IMinichef.sol";
 import {IUniswapRouterV2} from "../interfaces/uniswap/IUniswapRouterV2.sol";
 
 import {BaseStrategy} from "../deps/BaseStrategy.sol";
@@ -28,7 +29,7 @@ contract MyStrategy is BaseStrategy {
     address public constant SUSHISWAP_ROUTER =
         0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
 
-    uint256 public constant pid = 0; // TODO: WBTC-WETH-SUSHI-Polygon pool ID
+    uint256 public constant pid = 3; // WBTC-WETH-SUSHI-Polygon pool ID from https://thegraph.com/legacy-explorer/subgraph/sushiswap/matic-minichef
     uint256 public constant MAX_BPS = 10_000;
 
     // Used to signal to the Badger Tree that rewards where sent to it
@@ -87,7 +88,8 @@ contract MyStrategy is BaseStrategy {
 
     /// @dev Balance of want currently held in strategy positions
     function balanceOfPool() public view override returns (uint256) {
-        return 0;
+        (uint256 amount, ) = IMiniChefV2(CHEF).userInfo(pid, address(this));
+        return amount;
     }
 
     /// @dev Returns true if this strategy requires tending
