@@ -29,7 +29,12 @@ contract MyStrategy is BaseStrategy {
     address public constant SUSHISWAP_ROUTER =
         0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
 
+    address public constant WMATIC = 0x0769fd68dFb93167989C6f7254cd0D766Fb2841F; // WMATIC Polygon
+    address public constant wBTC = 0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6; // wBTC Polygon
+    address public constant wETH = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619; // wETH Polygon
+
     uint256 public constant pid = 3; // WBTC-WETH-SUSHI-Polygon pool ID from https://thegraph.com/legacy-explorer/subgraph/sushiswap/matic-minichef
+    uint256 public slippage = 50; // in terms of bps = 0.5%
     uint256 public constant MAX_BPS = 10_000;
 
     // Used to signal to the Badger Tree that rewards where sent to it
@@ -94,7 +99,7 @@ contract MyStrategy is BaseStrategy {
 
     /// @dev Returns true if this strategy requires tending
     function isTendable() public view override returns (bool) {
-        return true;
+        return balanceOfWant() > 0;
     }
 
     // @dev These are the tokens that cannot be moved except by the vault
@@ -106,8 +111,7 @@ contract MyStrategy is BaseStrategy {
     {
         address[] memory protectedTokens = new address[](3);
         protectedTokens[0] = want;
-        protectedTokens[1] = lpComponent;
-        protectedTokens[2] = reward;
+        protectedTokens[1] = reward;
         return protectedTokens;
     }
 
@@ -134,10 +138,16 @@ contract MyStrategy is BaseStrategy {
     /// @dev invest the amount of want
     /// @notice When this function is called, the controller has already sent want to this
     /// @notice Just get the current balance and then invest accordingly
-    function _deposit(uint256 _amount) internal override {}
+    function _deposit(uint256 _amount) internal override {
+        IMiniChefV2(CHEF).deposit(pid, _amount, address(this));
+    }
 
     /// @dev utility function to withdraw everything for migration
-    function _withdrawAll() internal override {}
+    function _withdrawAll() internal override {
+        // Maybe harvest all rewards
+        // withdraw
+        IMiniChefV2(CHEF).withdraw(pid, balanceOfPool(), address(this));
+    }
 
     /// @dev withdraw the specified amount of want, liquidate from lpComponent to want, paying off any necessary debt for the conversion
     function _withdrawSome(uint256 _amount)
@@ -145,6 +155,13 @@ contract MyStrategy is BaseStrategy {
         override
         returns (uint256)
     {
+        uint256 inPool = balanceOfPool();
+        if (_amount > inPool) {
+            _amount = inPool;
+        }
+
+        IMiniChefV2(CHEF).withdraw(pid, _amount, address(this));
+
         return _amount;
     }
 
@@ -155,6 +172,74 @@ contract MyStrategy is BaseStrategy {
         uint256 _before = IERC20Upgradeable(want).balanceOf(address(this));
 
         // Write your code here
+
+        IMiniChefV2(CHEF).harvest(pid, address(this));
+
+        // Get total rewards (WMATIC)
+        uint256 rewardsAmountWMATIC = IERC20Upgradeable(WMATIC).balanceOf(
+            address(this)
+        );
+
+        // Swap WMATIC for Sushi(which is reward token) through path: WMATIC -> SUSHI
+        address[] memory path = new address[](2);
+        path[0] = WMATIC;
+        path[1] = reward;
+        IUniswapRouterV2(SUSHISWAP_ROUTER).swapExactTokensForTokens(
+            rewardsAmountWMATIC,
+            0, // TODO: should change this maybe use chainlink
+            path,
+            address(this),
+            now
+        );
+
+        // Get total rewards (SUSHI) . this will give us the total reward as wmatic reward is swapped to sushi
+        uint256 rewardsAmount = IERC20Upgradeable(reward).balanceOf(
+            address(this)
+        );
+
+        // Swap half sushi to weth and half to wbtc
+
+        // Swap Sushi for wBTC through path: SUSHI -> wBTC
+        uint256 sushiTowbtcAmount = rewardsAmount.mul(5000).div(MAX_BPS);
+        path = new address[](2);
+        path[0] = reward;
+        path[1] = wBTC;
+        IUniswapRouterV2(SUSHISWAP_ROUTER).swapExactTokensForTokens(
+            sushiTowbtcAmount,
+            0, // TODO: should change this maybe use chainlink
+            path,
+            address(this),
+            now
+        );
+
+        // Swap Sushi for wETH through path: SUSHI -> wETH
+        uint256 sushiTowethAmount = rewardsAmount.sub(sushiTowbtcAmount);
+        path = new address[](2);
+        path[0] = reward;
+        path[1] = wETH;
+        IUniswapRouterV2(SUSHISWAP_ROUTER).swapExactTokensForTokens(
+            sushiTowethAmount,
+            0, // TODO: should change this maybe use chainlink
+            path,
+            address(this),
+            now
+        );
+
+        // Add liquidity for WBTC-WETH pool
+        // check if they are needed to be added in the exact ratio or router takes care of it
+        uint256 wbtcIn = IERC20Upgradeable(wBTC).balanceOf(address(this));
+        uint256 wethIn = IERC20Upgradeable(wETH).balanceOf(address(this));
+
+        IUniswapRouterV2(SUSHISWAP_ROUTER).addLiquidity(
+            wBTC,
+            wETH,
+            wbtcIn,
+            wethIn,
+            wbtcIn.mul(slippage).div(MAX_BPS),
+            wethIn.mul(slippage).div(MAX_BPS),
+            address(this),
+            now
+        );
 
         uint256 earned = IERC20Upgradeable(want).balanceOf(address(this)).sub(
             _before
