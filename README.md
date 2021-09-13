@@ -1,3 +1,11 @@
+# WBTC/WETH Sushi Strategy on Polygon
+![wbc-weth-sushi](https://user-images.githubusercontent.com/31198893/133146704-a820d142-c3b2-493c-a2d2-d5ef556f63f9.jpg)
+
+### APR ( as calculated on 13th September, 2021)
+APR = 0.25% (Pool fees by depositing WBTC and WETH in WBTC/WETH pool, proportional to their share of the pool.) + 9.97% (Depositing SLP-WBTC/WETH into Sushifarm on Polygon) = 10.22%
+![Screenshot from 2021-09-14 01-17-55](https://user-images.githubusercontent.com/31198893/133147486-524e257a-dcf2-48f8-a819-08d1252e7783.png)
+
+
 # Badger Strategy V1 Brownie Mix
 
 - Video Introduction: https://youtu.be/FVbhgPYW_D0
