@@ -8,7 +8,6 @@ from brownie import (
 from config import (
     BADGER_DEV_MULTISIG,
     WANT,
-    LP_COMPONENT,
     REWARD_TOKEN,
     PROTECTED_TOKENS,
     FEES,
@@ -31,7 +30,9 @@ def deployed():
     governance = accounts.at(BADGER_DEV_MULTISIG, force=True)
 
     controller = Controller.deploy({"from": deployer})
-    controller.initialize(BADGER_DEV_MULTISIG, strategist, keeper, BADGER_DEV_MULTISIG)
+    controller.initialize(
+        BADGER_DEV_MULTISIG, strategist, keeper, BADGER_DEV_MULTISIG, {"from": deployer}
+    )
 
     sett = SettV3.deploy({"from": deployer})
     sett.initialize(
@@ -46,7 +47,7 @@ def deployed():
     )
 
     sett.unpause({"from": governance})
-    controller.setVault(WANT, sett)
+    controller.setVault(WANT, sett, {"from": deployer})
 
     ## TODO: Add guest list once we find compatible, tested, contract
     # guestList = VipCappedGuestListWrapperUpgradeable.deploy({"from": deployer})
@@ -71,7 +72,7 @@ def deployed():
 
     ## Set up tokens
     want = interface.IERC20(WANT)
-    lpComponent = interface.IERC20(LP_COMPONENT)
+    # lpComponent = interface.IERC20(LP_COMPONENT)
     rewardToken = interface.IERC20(REWARD_TOKEN)
 
     ## Wire up Controller to Strart
@@ -79,15 +80,59 @@ def deployed():
     controller.approveStrategy(WANT, strategy, {"from": governance})
     controller.setStrategy(WANT, strategy, {"from": deployer})
 
+    WETH = strategy.wETH()
+    WBTC = strategy.wBTC()
+    SUSHI = strategy.reward()
+    MATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
+    wbtc = interface.IERC20(WBTC)
+    weth = interface.IERC20(WETH)
+    sushi = interface.IERC20(SUSHI)
+
     ## Uniswap some tokens here
-    router = interface.IUniswapRouterV2("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
+    router = interface.IUniswapRouterV2(strategy.SUSHISWAP_ROUTER())
+
+    sushi.approve(router.address, 999999999999999999999999999999, {"from": deployer})
+    wbtc.approve(router.address, 999999999999999999999999999999, {"from": deployer})
+    weth.approve(router.address, 999999999999999999999999999999, {"from": deployer})
+
+    deposit_amount = 2500 * 10 ** 18
+
+    # Buy weth through path ETH -> MATIC -> WETH
     router.swapExactETHForTokens(
-        0,  ## Mint out
-        ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", WANT],
+        0,
+        [MATIC, WETH],
         deployer,
         9999999999999999,
-        {"from": deployer, "value": 5000000000000000000},
+        {"value": deposit_amount, "from": deployer},
     )
+
+    # Buy wbtc with path ETH -> MATIC -> WETH -> WBTC
+    router.swapExactETHForTokens(
+        0,
+        [MATIC, WETH, WBTC],
+        deployer,
+        9999999999999999,
+        {"value": deposit_amount, "from": deployer},
+    )
+
+    print("Balance of WBTC: ", wbtc.balanceOf(deployer))
+    print("Balance of WETH: ", weth.balanceOf(deployer))
+
+    # Add WETH-SUSHI liquidity
+    router.addLiquidity(
+        WBTC,
+        WETH,
+        wbtc.balanceOf(deployer),
+        weth.balanceOf(deployer),
+        wbtc.balanceOf(deployer) * 0.005,
+        weth.balanceOf(deployer) * 0.005,
+        deployer,
+        9999999999999999,
+        {"from": deployer},
+    )
+
+    print("Initial Want Balance: ", want.balanceOf(deployer.address))
+    assert want.balanceOf(deployer) > 0
 
     return DotMap(
         deployer=deployer,
@@ -97,7 +142,6 @@ def deployed():
         strategy=strategy,
         # guestList=guestList,
         want=want,
-        lpComponent=lpComponent,
         rewardToken=rewardToken,
     )
 
@@ -135,7 +179,7 @@ def want(deployed):
 
 @pytest.fixture
 def tokens():
-    return [WANT, LP_COMPONENT, REWARD_TOKEN]
+    return [WANT, REWARD_TOKEN]
 
 
 ## Accounts ##
