@@ -5,6 +5,8 @@
 APR = 0.25% (Pool fees by depositing WBTC and WETH in WBTC/WETH pool, proportional to their share of the pool.) + 9.97% (Depositing SLP-WBTC/WETH into Sushifarm on Polygon) = 10.22%
 ![Screenshot from 2021-09-14 01-17-55](https://user-images.githubusercontent.com/31198893/133147486-524e257a-dcf2-48f8-a819-08d1252e7783.png)
 
+### Tests passing
+![Screenshot from 2021-09-14 16-55-38](https://user-images.githubusercontent.com/31198893/133250043-cc19e622-a864-4d31-bc33-b31fb8654129.png)
 
 # Badger Strategy V1 Brownie Mix
 
