@@ -26,10 +26,11 @@ contract MyStrategy is BaseStrategy {
     address public reward; // Token we farm and swap to want / lpComponent
 
     address public constant CHEF = 0x0769fd68dFb93167989C6f7254cd0D766Fb2841F; // Polygon MiniChefv2
-    address public constant SUSHISWAP_ROUTER =
-        0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F;
 
-    address public constant WMATIC = 0x0769fd68dFb93167989C6f7254cd0D766Fb2841F; // WMATIC Polygon
+    address public constant SUSHISWAP_ROUTER =
+        0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506;
+
+    address public constant WMATIC = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270; // WMATIC Polygon
     address public constant wBTC = 0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6; // wBTC Polygon
     address public constant wETH = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619; // wETH Polygon
 
@@ -51,7 +52,7 @@ contract MyStrategy is BaseStrategy {
         address _controller,
         address _keeper,
         address _guardian,
-        address[3] memory _wantConfig,
+        address[2] memory _wantConfig,
         uint256[3] memory _feeConfig
     ) public initializer {
         __BaseStrategy_init(
@@ -76,7 +77,18 @@ contract MyStrategy is BaseStrategy {
             SUSHISWAP_ROUTER,
             type(uint256).max
         );
-        // IERC20Upgradeable(want).safeApprove(gauge, type(uint256).max);
+        IERC20Upgradeable(WMATIC).safeApprove(
+            SUSHISWAP_ROUTER,
+            type(uint256).max
+        );
+        IERC20Upgradeable(wETH).safeApprove(
+            SUSHISWAP_ROUTER,
+            type(uint256).max
+        );
+        IERC20Upgradeable(wBTC).safeApprove(
+            SUSHISWAP_ROUTER,
+            type(uint256).max
+        );
     }
 
     /// ===== View Functions =====
@@ -172,9 +184,9 @@ contract MyStrategy is BaseStrategy {
         uint256 _before = IERC20Upgradeable(want).balanceOf(address(this));
 
         // Write your code here
-
-        IMiniChefV2(CHEF).harvest(pid, address(this));
-
+        if (IMiniChefV2(CHEF).pendingSushi(pid, address(this)) > 0) {
+            IMiniChefV2(CHEF).harvest(pid, address(this));
+        }
         // Get total rewards (WMATIC)
         uint256 rewardsAmountWMATIC = IERC20Upgradeable(WMATIC).balanceOf(
             address(this)
@@ -199,11 +211,12 @@ contract MyStrategy is BaseStrategy {
 
         // Swap half sushi to weth and half to wbtc
 
-        // Swap Sushi for wBTC through path: SUSHI -> wBTC
+        // Swap Sushi for wBTC through path: SUSHI -> WETH -> wBTC
         uint256 sushiTowbtcAmount = rewardsAmount.mul(5000).div(MAX_BPS);
-        path = new address[](2);
+        path = new address[](3);
         path[0] = reward;
-        path[1] = wBTC;
+        path[1] = wETH;
+        path[2] = wBTC;
         IUniswapRouterV2(SUSHISWAP_ROUTER).swapExactTokensForTokens(
             sushiTowbtcAmount,
             0, // TODO: should change this maybe use chainlink
