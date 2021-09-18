@@ -23,7 +23,8 @@ class StrategyResolver(StrategyCoreResolver):
         Specifies extra check for ordinary operation on withdrawal
         Use this to verify that balances in the get_strategy_destinations are properly set
         """
-        assert True
+        # Balance of chef should be less after withdrawl
+        assert after.balances("want", "chef") < before.balances("want", "chef")
 
     def hook_after_confirm_deposit(self, before, after, params):
         """
@@ -37,7 +38,8 @@ class StrategyResolver(StrategyCoreResolver):
         Specifies extra check for ordinary operation on earn
         Use this to verify that balances in the get_strategy_destinations are properly set
         """
-        assert True
+        # Balance of chef should be more after deposit into the strategy
+        assert after.balances("want", "chef") > before.balances("want", "chef")
 
     def confirm_harvest(self, before, after, tx):
         """
