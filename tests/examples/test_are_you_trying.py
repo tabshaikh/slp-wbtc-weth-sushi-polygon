@@ -34,7 +34,7 @@ def test_are_you_trying(deployer, sett, strategy, want):
     assert want.balanceOf(strategy) < available
 
     # Use this if it should invest all
-    # assert want.balanceOf(strategy) == 0
+    assert want.balanceOf(strategy) == 0
 
     # Change to this if the strat is supposed to hodl and do nothing
     # assert strategy.balanceOf(want) = depositAmount
@@ -43,4 +43,5 @@ def test_are_you_trying(deployer, sett, strategy, want):
     harvest = strategy.harvest({"from": deployer})
     event = harvest.events["Harvest"]
     # If it doesn't print, we don't want it
+    # Sushi Minichef emits an event for harvest therefore to get the harvest amount we need event[1]
     assert event[1]["harvested"] > 0
