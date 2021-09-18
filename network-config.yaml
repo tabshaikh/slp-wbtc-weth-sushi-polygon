@@ -20,7 +20,7 @@ live:
       chainid: 137
       id: polygon-main
       host: https://polygon-mainnet.infura.io/v3/21317ddb5ded42ce8d40c7d78f90474f
-      explorer: https://api.polygonscan.com/api
+      explorer: https://api.polygonscan.com/api?apikey=N7PDVRZI37XFY27MWIE7CRPJZA21SSKY6X
     - name: Mumbai Testnet
       chainid: 80001
       id: polygon-testnet
