@@ -8,6 +8,26 @@ APR = 0.25% (Pool fees by depositing WBTC and WETH in WBTC/WETH pool, proportion
 ### Tests passing
 ![Screenshot from 2021-09-14 16-55-38](https://user-images.githubusercontent.com/31198893/133250043-cc19e622-a864-4d31-bc33-b31fb8654129.png)
 
+### Installation and Setup
+
+ - Install the dependencies in the package
+```
+## Javascript dependencies
+npm i
+
+## Python Dependencies
+pip install virtualenv
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+ - import brownie network config
+```
+brownie networks import network-config.yaml 
+# if you have the network with same name already in your `brownie networks list` the above command will fail, to overcome this change the name of the networks in network-config.yaml and brownie-config.yaml accordingly.
+```
+
+
 # Badger Strategy V1 Brownie Mix
 
 - Video Introduction: https://youtu.be/FVbhgPYW_D0
