@@ -283,6 +283,15 @@ contract MyStrategy is BaseStrategy {
     function tend() external whenNotPaused {
         _onlyAuthorizedActors();
     }
+    
+    /// @notice sets slippage tolerance for liquidity provision in terms of BPS ie.
+    /// @notice minSlippage = 0
+    /// @notice maxSlippage = 10_000
+    function setSlippageTolerance(uint256 _s) external whenNotPaused {
+        _onlyGovernanceOrStrategist();
+        require(_s <= 10_000, "slippage out of bounds");
+        slippage = _s;
+    }
 
     /// ===== Internal Helper Functions =====
 
