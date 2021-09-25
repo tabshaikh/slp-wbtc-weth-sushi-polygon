@@ -28,14 +28,14 @@ contract MyStrategy is BaseStrategy {
     address public constant CHEF = 0x0769fd68dFb93167989C6f7254cd0D766Fb2841F; // Polygon MiniChefv2
 
     address public constant SUSHISWAP_ROUTER =
-        0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506;
+        0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506; // Sushiswap router on Polygon
 
     address public constant WMATIC = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270; // WMATIC Polygon
     address public constant wBTC = 0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6; // wBTC Polygon
     address public constant wETH = 0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619; // wETH Polygon
 
     uint256 public constant pid = 3; // WBTC-WETH-SUSHI-Polygon pool ID from https://thegraph.com/legacy-explorer/subgraph/sushiswap/matic-minichef
-    uint256 public slippage = 50; // in terms of bps = 0.5%
+    uint256 public slippage = 50; // in terms of bps, = 0.5%
     uint256 public constant MAX_BPS = 10_000;
 
     // Used to signal to the Badger Tree that rewards where sent to it
@@ -127,12 +127,6 @@ contract MyStrategy is BaseStrategy {
         return protectedTokens;
     }
 
-    /// ===== Permissioned Actions: Governance =====
-    /// @notice Delete if you don't need!
-    function setKeepReward(uint256 _setKeepReward) external {
-        _onlyGovernance();
-    }
-
     /// ===== Internal Core Implementations =====
 
     /// @dev security check to avoid moving tokens that would cause a rugpull, edit based on strat
@@ -156,8 +150,7 @@ contract MyStrategy is BaseStrategy {
 
     /// @dev utility function to withdraw everything for migration
     function _withdrawAll() internal override {
-        // Maybe harvest all rewards
-        // withdraw
+        // withdraw all from sushifarm into want
         IMiniChefV2(CHEF).withdraw(pid, balanceOfPool(), address(this));
     }
 
@@ -240,7 +233,6 @@ contract MyStrategy is BaseStrategy {
         );
 
         // Add liquidity for WBTC-WETH pool
-        // check if they are needed to be added in the exact ratio or router takes care of it
         uint256 wbtcIn = IERC20Upgradeable(wBTC).balanceOf(address(this));
         uint256 wethIn = IERC20Upgradeable(wETH).balanceOf(address(this));
 
@@ -282,8 +274,14 @@ contract MyStrategy is BaseStrategy {
     /// @dev Rebalance, Compound or Pay off debt here
     function tend() external whenNotPaused {
         _onlyAuthorizedActors();
+        uint256 balanceOfWant = IERC20Upgradeable(want).balanceOf(
+            address(this)
+        );
+        if (balanceOfWant > 0) {
+            _deposit(balanceOfWant);
+        }
     }
-    
+
     /// @notice sets slippage tolerance for liquidity provision in terms of BPS ie.
     /// @notice minSlippage = 0
     /// @notice maxSlippage = 10_000
