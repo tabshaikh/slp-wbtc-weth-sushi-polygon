@@ -1,5 +1,6 @@
 # WBTC/WETH Sushi Strategy on Polygon
-![wbc-weth-sushi](https://user-images.githubusercontent.com/31198893/133146704-a820d142-c3b2-493c-a2d2-d5ef556f63f9.jpg)
+![Flow board](https://user-images.githubusercontent.com/31198893/134807717-f50c22aa-cfff-4d0c-b44a-6bf2db6c19d9.jpg)
+
 
 ### APR ( as calculated on 13th September, 2021)
 APR = 0.25% (Pool fees by depositing WBTC and WETH in WBTC/WETH pool, proportional to their share of the pool.) + 9.97% (Depositing SLP-WBTC/WETH into Sushifarm on Polygon) = 10.22%
