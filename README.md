@@ -2,7 +2,7 @@
 
 ![Cover Image](https://user-images.githubusercontent.com/31198893/134809744-dad4960e-112f-45a7-88ce-246192611890.png)
 
-**Video:**
+**Video:** https://www.youtube.com/watch?v=9rotCBgSS_0
 
 **Slides:** https://docs.google.com/presentation/d/1spZilDKjrupPU8MmL7fZYyzsyOxZc_3YnH6t5YZ5m7Y/edit?usp=sharing
 
