@@ -68,6 +68,10 @@ This strategy interacts with the following additional contracts:
 - Sushiswap Router: [0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506](https://polygonscan.com/address/0x1b02da8cb0d097eb8d57a175b88c7d8b47997506)
 - MiniChefv2: [0x0769fd68dFb93167989C6f7254cd0D766Fb2841F](https://polygonscan.com/address/0x0769fd68dfb93167989c6f7254cd0d766fb2841f)
 
+# Notes:
+
+- if this error `transaction error "Fail with error 'BoringERC20: Transfer failed` pops up while running test. It is because the MiniChef is out of sushi rewards. Therefore post a message in Sushi's discord for the MiniChef to be filled again with rewards and wait for some time before trying to run the tests again.
+
 # Original Readme:
 
 # Badger Strategy V1 Brownie Mix
