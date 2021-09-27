@@ -1,17 +1,48 @@
-# WBTC/WETH Sushi Strategy on Polygon
-![Flow board](https://user-images.githubusercontent.com/31198893/134807717-f50c22aa-cfff-4d0c-b44a-6bf2db6c19d9.jpg)
+# SLP-wBTC/wETH Sushi Strategy on Polygon
 
+![Cover Image](https://user-images.githubusercontent.com/31198893/134809744-dad4960e-112f-45a7-88ce-246192611890.png)
 
-### APR ( as calculated on 13th September, 2021)
-APR = 0.25% (Pool fees by depositing WBTC and WETH in WBTC/WETH pool, proportional to their share of the pool.) + 9.97% (Depositing SLP-WBTC/WETH into Sushifarm on Polygon) = 10.22%
+**Video:**
+
+**Slides:** https://docs.google.com/presentation/d/1spZilDKjrupPU8MmL7fZYyzsyOxZc_3YnH6t5YZ5m7Y/edit?usp=sharing
+
+This strategy deposits slp-WBTC/WETH tokens into WBTC/WETH SLP SushiSwap Farm. It will then claim sushi and wmatic rewards swap them into SLP-wBTC/wETH and compound the amount deposited.
+
+![Strategt Flow](https://user-images.githubusercontent.com/31198893/134807717-f50c22aa-cfff-4d0c-b44a-6bf2db6c19d9.jpg)
+
+# Functions
+
+### Deposit:
+
+Deposit fund's in WBTC/WETH SLP SushiSwap Farm on Polygon.
+
+### Withdraw:
+
+Withdraw fund's from WBTC/WETH SLP SushiSwap Farm.
+
+### Harvest:
+
+Harvest Sushi and wMATIC rewards, swap them into WBTC and WETH and then adds Liquidity into WBTC/WETH Sushi Pool on Polygon to get SLP-WBTC/WETH token(want).
+
+### Tend
+
+If there's any want in the strategy, deposit it in the pool.
+
+# APR ( as calculated on 13th September, 2021)
+
+**APR** = 0.25% (Pool fees by depositing WBTC and WETH in WBTC/WETH pool, proportional to their share of the pool.) + 9.97% (Depositing SLP-WBTC/WETH into Sushifarm on Polygon) = 10.22%
 ![Screenshot from 2021-09-14 01-17-55](https://user-images.githubusercontent.com/31198893/133147486-524e257a-dcf2-48f8-a819-08d1252e7783.png)
 
-### Tests passing
+# Tests passing
+
 ![Screenshot from 2021-09-14 16-55-38](https://user-images.githubusercontent.com/31198893/133250043-cc19e622-a864-4d31-bc33-b31fb8654129.png)
 
-### Installation and Setup
+# Installation and Setup
 
- - Install the dependencies in the package
+- [Install Brownie](https://eth-brownie.readthedocs.io/en/stable/install.html) & [Ganache-CLI](https://github.com/trufflesuite/ganache-cli), if you haven't already.
+
+- Install the dependencies in the package
+
 ```
 ## Javascript dependencies
 npm i
@@ -22,12 +53,22 @@ virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
- - import brownie network config
+
+- import brownie network config
+
 ```
-brownie networks import network-config.yaml 
+brownie networks import network-config.yaml
 # if you have the network with same name already in your `brownie networks list` the above command will fail, to overcome this change the name of the networks in network-config.yaml and brownie-config.yaml accordingly.
 ```
 
+# Contracts
+
+This strategy interacts with the following additional contracts:
+
+- Sushiswap Router: [0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506](https://polygonscan.com/address/0x1b02da8cb0d097eb8d57a175b88c7d8b47997506)
+- MiniChefv2: [0x0769fd68dFb93167989C6f7254cd0D766Fb2841F](https://polygonscan.com/address/0x0769fd68dfb93167989c6f7254cd0d766fb2841f)
+
+# Original Readme:
 
 # Badger Strategy V1 Brownie Mix
 
